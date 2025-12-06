@@ -11,5 +11,5 @@ __pycache__/
 # Các file tạm thời của IDE như VS Code
 .vscode/
 
-# Dữ liệu lớn
-train_data/
+# # Dữ liệu lớn
+# train_data/

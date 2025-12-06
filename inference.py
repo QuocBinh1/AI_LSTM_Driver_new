@@ -5,7 +5,7 @@ import tensorflow as tf
 import pickle
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_DIR = BASE_DIR / "models"
+MODEL_DIR = BASE_DIR / "backend" / "models"
 
 SEQ_LEN = 12
 

@@ -1,0 +1,21 @@
+Classes: mouth_natural, mouth_yawn
+Train - Loss: 0.083435, Accuracy: 0.977718
+Val   - Loss: 0.284449, Accuracy: 0.932072
+Val Precision (macro): 0.937098
+Val Recall    (macro): 0.932212
+Val F1-score  (macro): 0.931891
+
+Confusion matrix (rows = y_true, cols = y_pred)
+    mouth_natural	mouth_yawn
+mouth_natural	572	8
+mouth_yawn	71	512
+
+Classification report:
+               precision    recall  f1-score   support
+
+mouth_natural     0.8896    0.9862    0.9354       580
+   mouth_yawn     0.9846    0.8782    0.9284       583
+
+     accuracy                         0.9321      1163
+    macro avg     0.9371    0.9322    0.9319      1163
+ weighted avg     0.9372    0.9321    0.9319      1163

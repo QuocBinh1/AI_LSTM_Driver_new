@@ -1,0 +1,21 @@
+Classes: eyes_natural, eyes_sleepy
+Train - Loss: 0.085028, Accuracy: 0.978417
+Val   - Loss: 0.010119, Accuracy: 1.000000
+Val Precision (macro): 1.000000
+Val Recall    (macro): 1.000000
+Val F1-score  (macro): 1.000000
+
+Confusion matrix (rows = y_true, cols = y_pred)
+    eyes_natural	eyes_sleepy
+eyes_natural	579	0
+eyes_sleepy	0	583
+
+Classification report:
+              precision    recall  f1-score   support
+
+eyes_natural     1.0000    1.0000    1.0000       579
+ eyes_sleepy     1.0000    1.0000    1.0000       583
+
+    accuracy                         1.0000      1162
+   macro avg     1.0000    1.0000    1.0000      1162
+weighted avg     1.0000    1.0000    1.0000      1162

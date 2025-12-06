@@ -1,10 +1,8 @@
-import os
-import time
-import csv
-import cv2
-import argparse
+import os,sys,cv2,csv,time,argparse
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pathlib import Path
 from detect_landmarks import detect_facial_landmarks  # trả (ear, mar, frame)
+
 
 # ====== Chuẩn hoá đường dẫn theo cây: code/, data/, music/ ======
 HERE = Path(__file__).resolve()
@@ -12,22 +10,22 @@ PROJ = HERE.parent.parent
 DATA_DIR = PROJ / "data"
 
 # ====== Ghi CSV EAR/MAR ======
-def record_csv(out_csv: Path, seconds: int = 15, feature: str = "ear", cam_index: int = 1):
+def record_csv(out_csv: Path, feature: str = "ear"):
     out_csv = Path(out_csv)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
 
     # Use the requested camera index (was hard-coded to 1 previously)
-    cap = cv2.VideoCapture(cam_index)
+    cap = cv2.VideoCapture(1)
     if not cap.isOpened():
-        print(f"[ERR] Không mở được camera index {cam_index}. Thử index khác (0,1,2...).")
+        print(f"[ERR] Không mở được camera index {1}. Thử index khác (0,1,2...).")
         return
 
     values = []
     t0 = time.time()
-    print(f"[INFO] Bắt đầu ghi '{feature.upper()}' trong ~{seconds}s → {out_csv}")
+    print(f"[INFO] Bắt đầu ghi '{feature.upper()}' trong ~{20}s → {out_csv}")
     print("[INFO] Nhấn 'q' để dừng sớm.")
 
-    while time.time() - t0 < seconds:
+    while time.time() - t0 < 20:
         ok, frame = cap.read()
         if not ok:
             print("[ERR] Không đọc được khung hình từ camera.")
@@ -37,12 +35,14 @@ def record_csv(out_csv: Path, seconds: int = 15, feature: str = "ear", cam_index
         if ear is not None:
             values.append(float(ear if feature == "ear" else mar))
 
-        # HUD
-        txt = f"Recording {feature.upper()} | {len(values)} frames"
+        # HUD Recording {feature.upper()} | 
+        txt = f"{len(values)} frames"
         cv2.putText(vis, txt, (10, 56), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
         cv2.imshow("Record EAR/MAR", vis)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        
 
     cap.release()
     cv2.destroyAllWindows()
@@ -93,4 +93,8 @@ if __name__ == "__main__":
         ts = time.strftime("%Y%m%d_%H%M%S")
         out_csv = base_dir / f"{args.cls}_{ts}.csv"
 
-    record_csv(out_csv=out_csv, seconds=args.seconds, feature=feature, cam_index=args.cam)
+    record_csv(out_csv=out_csv)
+
+
+#thu thập từng trạng thái
+#py record_ear_mar.py --cls mouth_natural --seconds 20

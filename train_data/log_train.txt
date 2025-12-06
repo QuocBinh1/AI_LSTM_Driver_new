@@ -1,0 +1,140 @@
+(venv) PS C:\Users\binhp\AI\DATN\driver_drowsiness\train_data> python train_lstm_sequence.py
+2025-12-03 02:01:02.339036: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\losses.py:2976: The name tf.losses.sparse_softmax_cross_entropy is deprecated. Please use tf.compat.v1.losses.sparse_softmax_cross_entropy instead.
+
+[INFO] Train size=3336
+  eyes_natural 1590 (0.48)
+  eyes_sleepy 1746 (0.52)
+[INFO] Val size=1162
+  eyes_natural 579 (0.50)
+  eyes_sleepy 583 (0.50)
+[INFO] Train shape: (3336, 12, 1) Val shape: (1162, 12, 1)
+WARNING:tensorflow:From C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\backend.py:1398: The name tf.executing_eagerly_outside_functions is deprecated. Please use tf.compat.v1.executing_eagerly_outside_functions instead.
+
+2025-12-03 02:01:25.960757: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE SSE2 SSE3 SSE4.1 SSE4.2 AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:From C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\optimizers\__init__.py:309: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+Model: "sequential"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ bidirectional (Bidirection  (None, 128)               33792     
+ al)
+
+ dense (Dense)               (None, 32)                4128      
+
+ dense_1 (Dense)             (None, 2)                 66
+
+=================================================================
+Total params: 37986 (148.38 KB)
+Trainable params: 37986 (148.38 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Epoch 1/60
+WARNING:tensorflow:From C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\utils\tf_utils.py:492: The name tf.ragged.RaggedTensorValue is deprecated. Please use tf.compat.v1.ragged.RaggedTensorValue instead.
+
+WARNING:tensorflow:From C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\engine\base_layer_utils.py:384: The name tf.executing_eagerly_outside_functions is deprecated. Please use tf.compat.v1.executing_eagerly_outside_functions instead.
+
+53/53 [==============================] - 5s 24ms/step - loss: 0.6905 - accuracy: 0.5279 - val_loss: 0.6829 - val_accuracy: 0.5017
+Epoch 2/60
+53/53 [==============================] - 0s 9ms/step - loss: 0.3933 - accuracy: 0.8996 - val_loss: 0.0101 - val_accuracy: 1.0000
+Epoch 3/60
+53/53 [==============================] - 0s 8ms/step - loss: 0.0594 - accuracy: 0.9841 - val_loss: 0.0772 - val_accuracy: 0.9785
+Epoch 4/60
+53/53 [==============================] - 0s 8ms/step - loss: 0.0614 - accuracy: 0.9847 - val_loss: 0.0158 - val_accuracy: 1.0000
+Epoch 5/60
+53/53 [==============================] - 1s 10ms/step - loss: 0.0563 - accuracy: 0.9856 - val_loss: 0.0193 - val_accuracy: 1.0000
+Epoch 6/60
+53/53 [==============================] - 1s 13ms/step - loss: 0.0781 - accuracy: 0.9787 - val_loss: 0.0580 - val_accuracy: 0.9785
+Epoch 7/60
+53/53 [==============================] - 1s 10ms/step - loss: 0.0465 - accuracy: 0.9892 - val_loss: 0.0178 - val_accuracy: 1.0000
+Epoch 8/60
+53/53 [==============================] - 1s 10ms/step - loss: 0.0507 - accuracy: 0.9868 - val_loss: 0.0209 - val_accuracy: 1.0000
+Epoch 9/60
+53/53 [==============================] - 1s 10ms/step - loss: 0.0459 - accuracy: 0.9895 - val_loss: 0.0278 - val_accuracy: 0.9897
+Epoch 10/60
+53/53 [==============================] - 0s 9ms/step - loss: 0.0463 - accuracy: 0.9889 - val_loss: 0.1785 - val_accuracy: 0.9217
+Epoch 11/60
+53/53 [==============================] - 0s 8ms/step - loss: 0.0593 - accuracy: 0.9859 - val_loss: 0.0432 - val_accuracy: 0.9845
+Epoch 12/60
+53/53 [==============================] - 0s 9ms/step - loss: 0.0501 - accuracy: 0.9886 - val_loss: 0.2399 - val_accuracy: 0.8941
+[INFO] Đã lưu hình: C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\EyeLSTM_accuracy.png và C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\EyeLSTM_loss.png
+
+========== METRICS ==========
+Classes: ['eyes_natural', 'eyes_sleepy']
+Train  - Loss: 0.0850  Accuracy: 0.9784
+Val    - Loss: 0.0101  Accuracy: 1.0000
+Val Precision (macro): 1.0000
+Val Recall    (macro): 1.0000
+Val F1-score  (macro): 1.0000
+Confusion matrix (rows = y_true, cols = y_pred):
+[[579   0]
+ [  0 583]]
+[INFO] Đã lưu metrics vào: C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\EyeLSTM_metrics.txt
+C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\engine\training.py:3103: UserWarning: You are saving your model as an HDF5 file via `model.save()`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')`.
+  saving_api.save_model(
+Saved C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\EyeLSTM.h5 C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\label_encoder_eye.pkl classes= ['eyes_natural', 'eyes_sleepy']
+[INFO] Train size=4084
+  mouth_natural 2336 (0.57)
+  mouth_yawn 1748 (0.43)
+[INFO] Val size=1163
+  mouth_natural 580 (0.50)
+  mouth_yawn 583 (0.50)
+[INFO] Train shape: (4084, 12, 1) Val shape: (1163, 12, 1)
+Model: "sequential_1"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #
+=================================================================
+ bidirectional_1 (Bidirecti  (None, 128)               33792
+ onal)
+
+ dense_2 (Dense)             (None, 32)                4128
+
+ dense_3 (Dense)             (None, 2)                 66
+
+=================================================================
+Total params: 37986 (148.38 KB)
+Trainable params: 37986 (148.38 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Epoch 1/60
+64/64 [==============================] - 4s 19ms/step - loss: 0.2615 - accuracy: 0.9530 - val_loss: 0.3774 - val_accuracy: 0.8856
+Epoch 2/60
+64/64 [==============================] - 0s 8ms/step - loss: 0.0861 - accuracy: 0.9762 - val_loss: 0.2844 - val_accuracy: 0.9321
+Epoch 3/60
+64/64 [==============================] - 0s 8ms/step - loss: 0.0858 - accuracy: 0.9777 - val_loss: 0.3684 - val_accuracy: 0.8822
+Epoch 4/60
+64/64 [==============================] - 1s 8ms/step - loss: 0.0832 - accuracy: 0.9785 - val_loss: 0.3921 - val_accuracy: 0.8831
+Epoch 5/60
+64/64 [==============================] - 0s 7ms/step - loss: 0.0818 - accuracy: 0.9780 - val_loss: 0.4041 - val_accuracy: 0.8710
+Epoch 6/60
+64/64 [==============================] - 0s 7ms/step - loss: 0.0804 - accuracy: 0.9787 - val_loss: 0.3673 - val_accuracy: 0.9020
+Epoch 7/60
+64/64 [==============================] - 0s 8ms/step - loss: 0.0811 - accuracy: 0.9785 - val_loss: 0.2877 - val_accuracy: 0.9329
+Epoch 8/60
+64/64 [==============================] - 1s 8ms/step - loss: 0.0820 - accuracy: 0.9782 - val_loss: 0.3644 - val_accuracy: 0.8856
+Epoch 9/60
+64/64 [==============================] - 1s 8ms/step - loss: 0.0818 - accuracy: 0.9775 - val_loss: 0.3226 - val_accuracy: 0.9106
+Epoch 10/60
+64/64 [==============================] - 1s 9ms/step - loss: 0.0797 - accuracy: 0.9794 - val_loss: 0.2885 - val_accuracy: 0.9329
+Epoch 11/60
+64/64 [==============================] - 1s 8ms/step - loss: 0.0797 - accuracy: 0.9792 - val_loss: 0.6516 - val_accuracy: 0.6801
+Epoch 12/60
+64/64 [==============================] - 1s 8ms/step - loss: 0.0818 - accuracy: 0.9787 - val_loss: 0.4268 - val_accuracy: 0.8478
+[INFO] Đã lưu hình: C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\MouthLSTM_accuracy.png và C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\MouthLSTM_loss.png
+
+========== METRICS ==========
+Classes: ['mouth_natural', 'mouth_yawn']
+Train  - Loss: 0.0834  Accuracy: 0.9777
+Val    - Loss: 0.2844  Accuracy: 0.9321
+Val Precision (macro): 0.9371
+Val Recall    (macro): 0.9322
+Val F1-score  (macro): 0.9319
+Confusion matrix (rows = y_true, cols = y_pred):
+[[572   8]
+ [ 71 512]]
+[INFO] Đã lưu metrics vào: C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\MouthLSTM_metrics.txt
+C:\Users\binhp\AI\DATN\driver_drowsiness\venv\Lib\site-packages\keras\src\engine\training.py:3103: UserWarning: You are saving your model as an HDF5 file via `model.save()`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')`.
+  saving_api.save_model(
+Saved C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\MouthLSTM.h5 C:\Users\binhp\AI\DATN\driver_drowsiness\backend\models\label_encoder_mouth.pkl classes= ['mouth_natural', 'mouth_yawn']
