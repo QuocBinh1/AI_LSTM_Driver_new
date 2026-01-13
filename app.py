@@ -1,7 +1,7 @@
 import time
 from collections import deque
 
-import cv2
+import cv2 # OpenCV
 import numpy as np
 import streamlit as st
 
@@ -13,52 +13,61 @@ from ui_dashboard import init_page, build_layout
 
 # ================== CẤU HÌNH TRANG + LAYOUT ==================
 init_page()
+
+#    trạng thái tài xế, thống kê cảnh báo, v.v.
 run, frame_placeholder, status_placeholder, stats_placeholder = build_layout()
 
-# ================== THAM SỐ HỆ THỐNG ==================
-SEQ_LEN = 12
+SEQ_LEN = 12 
+
+LSTM_PRED_BUF_LEN = 5     # chứa 5 lần dự đoán gần nhất [NORMAL, YAWN, YAWN, YAWN, NORMAL]
+LSTM_PRED_MIN_VOTES = 3      
 
 SLEEP_MIN_DUR = 3.0          # mắt nhắm liên tục >= 3s -> buồn ngủ
 REFRACTORY_AFTER_OPEN = 0.4  # sau khi mở mắt, 0.4s không báo lại
 
-TALK_LOW = 0.16
+TALK_LOW = 0.16 
+
 MOUTH_OPEN_T = 0.30
 OPEN_MIN_DUR = 0.50
-YAWN_FACTOR = 1.4
-YAWN_MIN_DUR = 1.20
 
-BASELINE_CALIB_TIME = 3.0
+YAWN_FACTOR = 1.4  # ngưỡng ngáp 
+YAWN_MIN_DUR = 1.20 #  miệng ngáp duy trì >= 1.2s
 
-# Thời lượng nháy (giây). Nếu mắt đóng nhanh <= BLINK_MAX_DUR coi là nháy.
-# Nếu đóng lâu >= SLEEP_MIN_DUR coi là buồn ngủ (DROWSY).
-BLINK_MIN_DUR = 0.04
-BLINK_MAX_DUR = 0.25
+BASELINE_CALIB_TIME = 3.0 # thời gian hiệu chuẩn ban đầu
+
+BLINK_MIN_DUR = 0.04 # nháy mắt đóng từ 0.04s trở lên
+BLINK_MAX_DUR = 0.25 # nháy mắt đóng tối đa 0.25s
 
 # ================== SESSION STATE ==================
-s = st.session_state
+s = st.session_state #khởi tạo bộ nhớ trạng thái
 
+# kiểm tra xem biến ear_buffer có chưa , nếu chưa thì tạo 
 if "ear_buf" not in s:
     s.ear_buf = deque(maxlen=SEQ_LEN)
     s.mar_buf = deque(maxlen=SEQ_LEN)
+    
+    s.eye_pred_buf = deque(maxlen=LSTM_PRED_BUF_LEN)
+    s.mouth_pred_buf = deque(maxlen=LSTM_PRED_BUF_LEN)
 
 # mắt
 if "eye_is_closed" not in s:
-    s.eye_is_closed = False
-    s.eye_closed_since = 0.0
-    s.sleepy_active = False
-    s.eye_refractory_until = 0.0
+    s.eye_is_closed = False #khởi tạo trạng thái mắt
+    s.eye_closed_since = 0.0   # thời gian nhắm mắt ,=< 0.3s là nháy ,  3s thì buồn ngủ , 
+    s.sleepy_active = False # cờ buồn ngủ
+    s.eye_refractory_until = 0.0    # thời gian miễn nhiễm sau khi mở mắt
+    s.eye_min_ear_during_close = 1.0  # track EAR thấp nhất trong lần đóng
 
 # miệng
 if "mouth_open_since" not in s:
-    s.mouth_open_since = 0.0
-    s.mid_open_since = 0.0
-    s.prev_mouth_state = "closed"
-    s.talk_osc = 0
+    s.mouth_open_since = 0.0 # thời gian miệng mở to
+    s.mid_open_since = 0.0 # thời gian miệng mở nhẹ
+    s.prev_mouth_state = "closed" # trạng thái miệng trước đó
+    s.talk_osc = 0 # bộ đếm trạng thái nói chuyện
 
 # baseline & ngưỡng động
 if "ear_open_avg" not in s:
-    s.ear_open_avg = None
-    s.mar_open_avg = None
+    s.ear_open_avg = None #trung bình EAR khi mở mắt
+    s.mar_open_avg = None #trung bình MAR khi miệng bình thường
     s.BLINK_T_CLOSE = 0.32
     s.BLINK_T_OPEN = 0.38
     s.YAWN_T = 0.45
@@ -80,6 +89,32 @@ if "prev_status" not in s:
     s.prev_status = "INIT"
 
 # ================== HÀM AUTO CALIBRATION ==================
+#mỗi lần cảnh báo xong thì reset trạng thái
+def reset_all_states_except_calibration():
+    """Reset tất cả state trừ giá trị hiệu chuẩn (ear_open_avg, mar_open_avg)"""
+    # Reset buffers
+    s.ear_buf.clear()
+    s.mar_buf.clear()
+    s.eye_pred_buf.clear()
+    s.mouth_pred_buf.clear()
+    
+    # Reset mắt
+    s.eye_is_closed = False
+    s.eye_closed_since = 0.0
+    s.sleepy_active = False
+    s.eye_refractory_until = 0.0
+    
+    # Reset miệng
+    s.mouth_open_since = 0.0
+    s.mid_open_since = 0.0
+    s.prev_mouth_state = "closed"
+    s.talk_osc = 0
+    
+    # Reset flags alert
+    s.sent_drowsy_alert = False
+    s.sent_yawn_alert = False
+
+
 def auto_calibrate(cap):
     st.info("Đang hiệu chỉnh 3 giây đầu. Nhìn thẳng, mở mắt & ngậm miệng bình thường...")
     ear_vals, mar_vals = [], []
@@ -119,7 +154,7 @@ def auto_calibrate(cap):
 
 # ================== MAIN LOOP ==================
 if run:
-    cap = cv2.VideoCapture(1)  # nếu dùng camera khác thì sửa index
+    cap = cv2.VideoCapture(1) 
     if not cap.isOpened():
         st.error("Không mở được webcam. Vui lòng kiểm tra thiết bị.")
     else:
@@ -136,6 +171,9 @@ if run:
                 break
 
             now = time.time()
+
+            # ===== XỬ LÝ FRAME ===== 
+            # trích xuất EAR, MAR từ mediapipe facemesh
             ear, mar, vis_frame = detect_facial_landmarks(frame)
 
             status = "..."
@@ -153,19 +191,24 @@ if run:
                 s.ear_buf.append(float(ear))
                 s.mar_buf.append(float(mar))
 
+                #lấy trung bình 3 giá trị gần nhất để giảm nhiễu
                 ear_now = float(np.mean(list(s.ear_buf)[-3:]))
                 mar_now = float(np.mean(list(s.mar_buf)[-3:]))
 
                 # ===== 1) Heuristic mắt =====
                 if s.eye_is_closed:
+                    # Track EAR thấp nhất trong lần đóng
+                    s.eye_min_ear_during_close = min(s.eye_min_ear_during_close, ear_now)
+                    
                     if ear_now > s.BLINK_T_OPEN:
                         dur = now - s.eye_closed_since
-                        # Nếu đóng rất ngắn -> coi là nháy
-                        if dur <= BLINK_MAX_DUR and dur >= BLINK_MIN_DUR:
+                        # Nháy: đóng ngắn + EAR xuống rất thấp (< 0.15, ngưỡng khá hạt sạch)
+                        if (dur <= BLINK_MAX_DUR and dur >= BLINK_MIN_DUR and 
+                            s.eye_min_ear_during_close < 0.15):
                             blink_flag = True
                             s.sleepy_active = False
                         else:
-                            # Nếu đóng lâu -> coi là buồn ngủ
+                            # Nhắm: đóng lâu hoặc EAR không xuống đủ thấp -> buồn ngủ
                             if dur >= SLEEP_MIN_DUR:
                                 s.sleepy_active = True
 
@@ -173,6 +216,7 @@ if run:
                         s.eye_is_closed = False
                         s.eye_closed_since = 0.0
                         s.eye_refractory_until = now + REFRACTORY_AFTER_OPEN
+                        s.eye_min_ear_during_close = 1.0  # reset min
                     else:
                         if (now - s.eye_closed_since) >= SLEEP_MIN_DUR:
                             s.sleepy_active = True
@@ -180,8 +224,10 @@ if run:
                     if ear_now < s.BLINK_T_CLOSE:
                         s.eye_is_closed = True
                         s.eye_closed_since = now
+                        s.eye_min_ear_during_close = ear_now  # bắt đầu track
 
                 # ===== 2) Heuristic miệng =====
+                #ngáp wide(mở to), mid(mở nhẹ)
                 if mar_now >= s.YAWN_T:
                     if s.prev_mouth_state != "wide":
                         s.mouth_open_since = now
@@ -224,16 +270,34 @@ if run:
                     talk_flag = True
                     s.talk_osc = 0
 
-                # ===== 3) LSTM =====
+                # ===== 3) LSTM + Smoothing =====
                 eye_label = mouth_label = "..."
                 if len(s.ear_buf) == SEQ_LEN:
                     eye_label, _ = predict_eye(list(s.ear_buf))
+                    s.eye_pred_buf.append(eye_label)
                 if len(s.mar_buf) == SEQ_LEN:
                     mouth_label, _ = predict_mouth(list(s.mar_buf))
+                    s.mouth_pred_buf.append(mouth_label)
 
-                # ===== 4) KẾT HỢP =====
+                # Majority vote từ smoothing buffer
+                def get_majority_label(buf, default="..."):
+                    """Trả về nhãn phổ biến nhất. Nếu không đủ vote trả về default."""
+                    if len(buf) < LSTM_PRED_MIN_VOTES:
+                        return default
+                    from collections import Counter
+                    counts = Counter(buf)
+                    most_common_label, vote_count = counts.most_common(1)[0]
+                    if vote_count >= LSTM_PRED_MIN_VOTES:
+                        return most_common_label
+                    return default
+
+                # Sử dụng phương pháp bỏ phiếu đa số, cho đến khi bộ đệm có đủ phiếu bầu,
+                eye_label_smooth = get_majority_label(s.eye_pred_buf)
+                mouth_label_smooth = get_majority_label(s.mouth_pred_buf)
+
+                # ===== 4) KẾT HỢP quyết định cuối , ngưỡng+thời gian và LSTM(dự đoán chuỗi) =====
                 yawn_decide = (
-                    (mouth_label == "mouth_yawn" and mar_now >= s.YAWN_T)
+                    (mouth_label_smooth == "mouth_yawn" and mar_now >= s.YAWN_T)
                     or yawn_flag_rule
                 )
                 sleepy_decide = (
@@ -242,7 +306,7 @@ if run:
 
                 if yawn_decide:
                     status = "YAWNING"
-                    status_text = "⚠ Cảnh báo: Ngáp nhiều / há miệng lớn kéo dài."
+                    status_text = "Cảnh báo: Ngáp nhiều / há miệng lớn kéo dài."
                     status_level = "warning"
                     color = (0, 165, 255)
 
@@ -256,6 +320,8 @@ if run:
                         except Exception as e:
                             print("Telegram YAWN error:", e)
                         s.sent_yawn_alert = True
+                        # Reset toàn bộ state sau khi gửi alert (giữ lại calibration)
+                        reset_all_states_except_calibration()
 
                 elif sleepy_decide:
                     status = "DROWSY"
@@ -273,6 +339,8 @@ if run:
                         except Exception as e:
                             print("Telegram DROWSY error:", e)
                         s.sent_drowsy_alert = True
+                        # Reset toàn bộ state sau khi gửi alert (giữ lại calibration)
+                        reset_all_states_except_calibration()
 
                 elif talk_flag:
                     status = "TALKING"
@@ -301,8 +369,6 @@ if run:
                     status_level = "success"
                     color = (0, 255, 0)
                     reset_audio_state()
-                    s.sent_drowsy_alert = False
-                    s.sent_yawn_alert = False
 
                 # cập nhật thống kê
                 if status != s.prev_status:

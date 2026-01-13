@@ -22,7 +22,7 @@ with open(MODEL_DIR / "label_encoder_mouth.pkl", "rb") as f:
 EYE_CLASSES = list(enc_eye.classes_)
 MOUTH_CLASSES = list(enc_mouth.classes_)
 
-
+# Hàm chuẩn hoá chuỗi đầu vào theo dạng (1,12,1) , 1 chuỗi, 12 giá trị, 1 đặc trưng duy nhất
 def _prep(seq, target_len=SEQ_LEN):
     """Chuẩn hoá chuỗi về (1, target_len, 1). Thiếu thì lặp giá trị cuối."""
     arr = np.asarray(seq, dtype=np.float32)

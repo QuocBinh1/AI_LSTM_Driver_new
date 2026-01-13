@@ -5,8 +5,6 @@ import streamlit as st
 def init_page():
     """Cấu hình trang + CSS chung."""
     st.set_page_config(page_title="Driver Drowsiness Detection", layout="wide")
-
-   
     st.markdown(
         """
         <style>
@@ -73,7 +71,7 @@ def init_page():
     )
 
     st.markdown(
-        "<div class='kh-title'>Hệ thống nhận diện buồn ngủ của tài xế khi lái xe ô tô</div>",
+        "<div class='kh-title'>Hệ Thống Phát Hiện Trạng Thái Buồn Ngủ Của Tài Xế Khi Lái Xe Ô Tô</div>",
         unsafe_allow_html=True,
     )
 
@@ -94,9 +92,6 @@ def build_layout():
             "<div class='kh-card-title'>📷 Camera giám sát</div>",
             unsafe_allow_html=True,
         )
-
-        
-
         # bọc frame vào flex - khung camera ở giữa card
         st.markdown(
             "<div style='display:flex; justify-content:center;'>",
@@ -123,9 +118,6 @@ def build_layout():
 
         st.markdown("</div>", unsafe_allow_html=True)
             
-
-
-
     # ----- CÁC CARD BÊN PHẢI -----
     with col_right:
         # Trạng thái tài xế

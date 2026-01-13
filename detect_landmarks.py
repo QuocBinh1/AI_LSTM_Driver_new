@@ -3,17 +3,17 @@ import mediapipe as mp
 
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(
-    static_image_mode=False, max_num_faces=1, refine_landmarks=True,
-    min_detection_confidence=0.5, min_tracking_confidence=0.5
+    static_image_mode=False, #chế độ video
+    max_num_faces=1, #1 khuôn mặt
+    refine_landmarks=False,  #cài thiện độ chính sác
+    min_detection_confidence=0.5, 
+    min_tracking_confidence=0.5
 )
 
 # Chỉ số landmark (theo MediaPipe)
 LEFT_EYE  = [33, 160, 158, 133, 153, 144]    # outer-left, upper1, upper2, outer-right, lower1, lower2
 RIGHT_EYE = [263, 387, 385, 362, 380, 373]
 MOUTH_LR_TB = [78, 308, 13, 14]              # left, right, top, bottom
-
-def _euclid(a, b):
-    return float(np.linalg.norm(a - b))
 
 def eye_aspect_ratio(pts, eye_idx):
     """Tính EAR cho 1 mắt"""
@@ -25,14 +25,19 @@ def eye_aspect_ratio(pts, eye_idx):
     return ear
 
 def mouth_aspect_ratio(pts):
+    """Tính MAR cho miệng"""
     l, r, t, b = MOUTH_LR_TB
     horiz = _euclid(pts[l], pts[r])
     vert  = _euclid(pts[t], pts[b])
     mar = vert / (horiz + 1e-6)
     return mar
 
+# Hàm tính khoảng cách Euclid giữa 2 điểm
+def _euclid(a, b):
+    return float(np.linalg.norm(a - b))
+
 def detect_facial_landmarks(frame_bgr):
-    """Trích xuất EAR và MAR từ ảnh BGR"""
+    """Trích xuất EAR và MAR từ ảnh RGB đầu vào"""
     frame = frame_bgr.copy()
     h, w = frame.shape[:2]
     res = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
